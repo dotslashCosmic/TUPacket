@@ -60,13 +60,25 @@ class TUPacket:
         message = f'Sending {count} {xprotocol} {packet_word} from {self.src_ip} to {self.dest_ip}...'
         print(message)
         logging.info(message)
+        xpacket = convert(ip_header) + convert(header)
+        xpacket = convert2(xpacket)
+        logging.info('Packet: ' + xpacket)
         for _ in range(count):
             time.sleep(delay / 1000)
             self.socket.sendto(packet, (self.dest_ip, 0))
         success_message = f'Successfully sent {count} {xprotocol} {packet_word} from {self.src_ip} to {self.dest_ip}.'
         print(success_message)
         logging.info(success_message)
-
+        
+def convert(hex_string):
+    hex_string = ''.join('\\x{:02x}'.format(b) for b in hex_string)
+    return hex_string
+    
+def convert2(hex_string):
+    hex_values = hex_string.split('\\x')[1:]
+    string = ''.join(chr(int(h, 16)) for h in hex_values)
+    return string
+    
 def validate_ip(ip):
     if ip.lower() in ["random", "list"]:
         return True
@@ -80,7 +92,7 @@ def validate_port(port):
     return 0 <= port <= 65535
 
 def main():
-    parser = argparse.ArgumentParser(description='TCP/UDP Packet Spoofer by dotslashCosmic')
+    parser = argparse.ArgumentParser(description='TCP/UDP Packet Spoofer\nby dotslashCosmic')
     parser.add_argument('-p', '--protocol', choices=['tcp', 'udp'], required=True, help='Protocol (tcp/udp)')
     parser.add_argument('-source', '--source-ip', required=True, help='Source IP (or "random" for random IP, "list" for list)')
     parser.add_argument('-dest', '--dest-ip', required=True, help='Destination IP')
@@ -110,9 +122,9 @@ def main():
     else:
         log_file = None
     if log_file:
-        logging.basicConfig(filename=log_file, level=logging.INFO)
+        logging.basicConfig(filename=log_file, level=logging.DEBUG)
     else:
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(level=logging.DEBUG)
     protocol = 6 if args.protocol.lower() == 'tcp' else 17
     tup = TUPacket(args.source_ip, args.dest_ip, args.source_port, args.dest_port, protocol)
     try:
