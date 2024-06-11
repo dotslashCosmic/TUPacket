@@ -32,7 +32,7 @@ class TUPacket:
                 break
         randip = first_octet + "".join('.' + str(random.randint(0, 255)) for _ in range(3))
         return randip
-        
+
     def spoof(self, delay, count):
         if self.src_ip == 'random':
             self.src_ip = self.generate_random_ip()
@@ -52,8 +52,8 @@ class TUPacket:
             header += b'\x50\x02\x71\x10'  # Data Offset, Reserved, Flags | Window Size
             header += b'\xe6\x32\x00\x00'  # Checksum | Urgent Pointer
         elif self.protocol == 17:  # UDP
-            header = b'\x00\x00' + self.dest_port.to_bytes(2, 'big')  # Source Port | Destination Port
-            header += b'\x00\x14\x00\x00'  # Length | Checksum (0 for now)
+            header = self.src_port.to_bytes(2, 'big') + self.dest_port.to_bytes(2, 'big')  # Source Port | Destination Port
+            header += b'\x00\x08\x00\x00'  # Length | Checksum (0 for now)
         packet = ip_header + header
         xprotocol = 'TCP' if self.protocol == 6 else 'UDP'
         packet_word = "packet" if count == 1 else "packets"
@@ -69,16 +69,16 @@ class TUPacket:
         success_message = f'Successfully sent {count} {xprotocol} {packet_word} from {self.src_ip} to {self.dest_ip}.'
         print(success_message)
         logging.info(success_message)
-        
+
 def convert(hex_string):
     hex_string = ''.join('\\x{:02x}'.format(b) for b in hex_string)
     return hex_string
-    
+
 def convert2(hex_string):
     hex_values = hex_string.split('\\x')[1:]
     string = ''.join(chr(int(h, 16)) for h in hex_values)
     return string
-    
+
 def validate_ip(ip):
     if ip.lower() in ["random", "list"]:
         return True
